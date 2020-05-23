@@ -1,0 +1,3 @@
+local AddOn, config = ...
+config.keywords = {
+}
