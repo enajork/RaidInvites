@@ -1,4 +1,4 @@
-<!-- 
+<!--
   written by topkek
  -->
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
@@ -27,16 +27,16 @@
         self:StopMovingOrSizing()
       </OnDragStop>
       <OnKeyDown>
-        handleKey(key, 0);
+        handleKey(key);
       </OnKeyDown>
       <OnEvent function="handleEvent"/>
       <OnMouseDown>
-        handleKey("ESCAPE", 0)
+        handleKey("ESCAPE")
       </OnMouseDown>
       <!-- <OnUpdate function="announce"/> -->
     </Scripts>
     <Size>
-      <AbsDimension x="180" y="300" />
+      <AbsDimension x="180" y="340" />
     </Size>
     <Anchors>
       <Anchor point="CENTER" relativeTo="UIParent"/>
@@ -51,20 +51,25 @@
       <Layer>
         <FontString inherits="GameFontNormal" text="Spam Interval">
           <Anchors>
-            <Anchor point="BOTTOMLEFT" relativeTo="$parent" x="30" y="250"/>
+            <Anchor point="BOTTOMLEFT" relativeTo="$parent" x="30" y="290"/>
           </Anchors>
         </FontString>
         <FontString inherits="GameFontNormal" text="Spam Message">
           <Anchors>
-            <Anchor point="BOTTOMLEFT" relativeTo="$parent" x="30" y="210"/>
+            <Anchor point="BOTTOMLEFT" relativeTo="$parent" x="30" y="250"/>
           </Anchors>
         </FontString>
         <FontString inherits="GameFontNormal" text="Invite Channels">
           <Anchors>
-            <Anchor point="BOTTOMLEFT" relativeTo="$parent" x="30" y="170"/>
+            <Anchor point="BOTTOMLEFT" relativeTo="$parent" x="30" y="210"/>
           </Anchors>
         </FontString>
         <FontString inherits="GameFontNormal" text="Invite Keyword">
+          <Anchors>
+            <Anchor point="BOTTOMLEFT" relativeTo="$parent" x="30" y="170"/>
+          </Anchors>
+        </FontString>
+        <FontString inherits="GameFontNormal" text="Raid Size">
           <Anchors>
             <Anchor point="BOTTOMLEFT" relativeTo="$parent" x="30" y="130"/>
           </Anchors>
@@ -82,7 +87,7 @@
         <Anchors>
           <Anchor point="TOPRIGHT">
             <Offset x="-8" y="-8"/>
-          </Anchor> 
+          </Anchor>
         </Anchors>
         <Scripts>
           <OnClick>
@@ -99,7 +104,7 @@
         <Size x="100" y="32" />
         <Anchors>
           <Anchor point="BOTTOMLEFT">
-            <Offset x="30" y="220" />
+            <Offset x="30" y="260" />
           </Anchor>
         </Anchors>
         <Layers>
@@ -132,10 +137,58 @@
             focusEditbox()
           </OnMouseDown>
           <OnKeyDown>
-            handleKey(key, 1)
+            handleKey(key)
           </OnKeyDown>
           <OnEnterPressed>
-            handleKey("ESCAPE", 1)
+            handleKey("ESCAPE")
+          </OnEnterPressed>
+          <OnTextChanged>
+            editboxChanged()
+          </OnTextChanged>
+        </Scripts>
+        <FontString inherits="ChatFontNormal" />
+      </EditBox>
+      <EditBox name="$parentEditBox" letters="80" autoFocus="false">
+        <Size x="100" y="32" />
+        <Anchors>
+          <Anchor point="BOTTOMLEFT">
+            <Offset x="30" y="220" />
+          </Anchor>
+        </Anchors>
+        <Layers>
+          <Layer level="BACKGROUND">
+            <Texture file="Interface\ChatFrame\UI-ChatInputBorder-Left">
+              <Size x="60" y="32" />
+              <Anchors>
+                <Anchor point="LEFT">
+                  <Offset x="-10" y="0" />
+                </Anchor>
+              </Anchors>
+              <TexCoords left="0" right="0.2" top="0" bottom="1.0"/>
+            </Texture>
+            <Texture file="Interface\ChatFrame\UI-ChatInputBorder-Right">
+              <Size x="60" y="32" />
+              <Anchors>
+                  <Anchor point="RIGHT">
+                      <Offset x="10" y="0" />
+                  </Anchor>
+              </Anchors>
+              <TexCoords left="0.7" right="1.0" top="0" bottom="1.0"/>
+            </Texture>
+          </Layer>
+        </Layers>
+        <Scripts>
+          <OnLoad>
+            initSpamMessageEditbox(self)
+          </OnLoad>
+          <OnMouseDown>
+            focusEditbox()
+          </OnMouseDown>
+          <OnKeyDown>
+            handleKey(key)
+          </OnKeyDown>
+          <OnEnterPressed>
+            handleKey("ESCAPE")
           </OnEnterPressed>
           <OnTextChanged>
             editboxChanged()
@@ -174,16 +227,16 @@
         </Layers>
         <Scripts>
           <OnLoad>
-            initSpamMessageEditbox(self)
+            initInviteChannelsEditbox(self)
           </OnLoad>
           <OnMouseDown>
             focusEditbox()
           </OnMouseDown>
           <OnKeyDown>
-            handleKey(key, 3)
+            handleKey(key)
           </OnKeyDown>
           <OnEnterPressed>
-            handleKey("ESCAPE", 3)
+            handleKey("ESCAPE")
           </OnEnterPressed>
           <OnTextChanged>
             editboxChanged()
@@ -222,16 +275,16 @@
         </Layers>
         <Scripts>
           <OnLoad>
-            initInviteChannelsEditbox(self)
+            initInviteKeywordEditbox(self)
           </OnLoad>
           <OnMouseDown>
             focusEditbox()
           </OnMouseDown>
           <OnKeyDown>
-            handleKey(key, 4)
+            handleKey(key)
           </OnKeyDown>
           <OnEnterPressed>
-            handleKey("ESCAPE", 4)
+            handleKey("ESCAPE")
           </OnEnterPressed>
           <OnTextChanged>
             editboxChanged()
@@ -270,16 +323,16 @@
         </Layers>
         <Scripts>
           <OnLoad>
-            initInviteKeywordEditbox(self)
+            initRaidSizeEditbox(self)
           </OnLoad>
           <OnMouseDown>
             focusEditbox()
           </OnMouseDown>
           <OnKeyDown>
-            handleKey(key, 5)
+            handleKey(key)
           </OnKeyDown>
           <OnEnterPressed>
-            handleKey("ESCAPE", 5)
+            handleKey("ESCAPE")
           </OnEnterPressed>
           <OnTextChanged>
             editboxChanged()
@@ -334,7 +387,7 @@
             initEnabledCheckbox(self)
           </OnLoad>
           <OnClick>
-            enabledChecked()
+            enabledChecked("click")
           </OnClick>
         </Scripts>
       </CheckButton>

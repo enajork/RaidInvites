@@ -6,8 +6,9 @@ local default = {
   spamMessage = "123 for invite",
   inviteChannels = "guild, whisper",
   inviteKeyword = "123",
+  raidSize = 40,
   caseSensitive = false,
-  guildOnly = false
+  guildOnly = false,
 }
 
 saved = saved or default
@@ -16,7 +17,22 @@ local hidden = true
 local enabled = false
 local TimeSinceLastUpdate = 0
 local UpdateInterval = 1
-local numInRaid = 0
+local numInRaid = 1
+
+function initialize()
+  spamIntervalEditbox:SetText(saved.spamInterval or "")
+  spamMessageEditbox:SetText(saved.spamMessage)
+  inviteChannelsEditbox:SetText(saved.inviteChannels)
+  inviteKeywordEditbox:SetText(saved.inviteKeyword)
+  raidSizeEditbox:SetText(saved.raidSize)
+  caseSensitiveCheckbox:SetChecked(saved.caseSensitive)
+  guildOnlyCheckBox:SetChecked(saved.guildOnly)
+  if hidden then
+    root:Hide()
+  end
+  TimeSinceLastUpdate = tonumber(saved.spamInterval) or 0
+  UpdateInterval = tonumber(saved.spamInterval) or nil
+end
 
 function loadRoot(this)
   root = this
@@ -31,11 +47,18 @@ function announce(self, elapsed)
   while (TimeSinceLastUpdate > UpdateInterval) do
     if enabled and saved.spamMessage ~= "" then
       numInRaid = GetNumGroupMembers() or numInRaid
+      if numInRaid == 0 then
+        numInRaid = 1
+      end
       if IsInGroup() then
-        SendChatMessage(saved.spamMessage .. " - (" .. numInRaid .. "/" .. "40) in raid", "RAID")
+        if saved.raidSize > 5 then
+          SendChatMessage(saved.spamMessage .. " - (" .. numInRaid .. "/" .. saved.raidSize .. ") in group", "RAID")
+        else
+          SendChatMessage(saved.spamMessage .. " - (" .. numInRaid .. "/" .. saved.raidSize .. ") in group", "PARTY")
+        end
       end
       if IsInGuild() then
-        SendChatMessage(saved.spamMessage .. " - (" .. numInRaid .. "/" .. "40) in raid", "GUILD")
+        SendChatMessage(saved.spamMessage .. " - (" .. numInRaid .. "/" .. saved.raidSize ..") in group", "GUILD")
       end
     end
     TimeSinceLastUpdate = TimeSinceLastUpdate - UpdateInterval
@@ -62,10 +85,20 @@ function containsKeyword(msg)
   end
 end
 
+function converter()
+  local max = tonumber(saved.raidSize) or 40
+  if max > 5 then
+    ConvertToRaid()
+  else
+    ConvertToParty()
+  end
+end
+
 function isGuildie(sender)
+  GuildRoster();
   local num = select(3, GetNumGuildMembers())
   for i = 1, num do
-    local name = GetGuildRosterInfo(tostring(i))
+    local name = GetGuildRosterInfo(i)
     if name == sender then
       return true
     end
@@ -74,9 +107,15 @@ function isGuildie(sender)
 end
 
 function shouldInvite(msg, sender)
+  numInRaid = GetNumGroupMembers() or numInRaid
+  local max = tonumber(saved.raidSize) or 40
   local player = UnitName("player")
   local realm = GetRealmName()
   local name = player.."-"..realm
+  if names ~= sender and numInRaid >= max and saved.debug then
+    print("|cffFF0000Raid full.|r")
+    return
+  end
   if name ~= sender and containsKeyword(msg) then
     if saved.guildOnly and isGuildie(sender) then
       InviteToGroup(sender)
@@ -102,18 +141,7 @@ function handleEvent(self, event, ...)
     root:EnableKeyboard(false)
     clearEditboxFocus()
   elseif event == "PLAYER_LOGIN" then
-    spamIntervalEditbox:SetText(saved.spamInterval or "")
-    spamMessageEditbox:SetText(saved.spamMessage)
-    inviteChannelsEditbox:SetText(saved.inviteChannels)
-    inviteKeywordEditbox:SetText(saved.inviteKeyword)
-    caseSensitiveCheckbox:SetChecked(saved.caseSensitive)
-    guildOnlyCheckBox:SetChecked(saved.guildOnly)
-    enabledCheckBox:SetChecked(enabled)
-    if hidden then
-      root:Hide()
-    end
-    TimeSinceLastUpdate = tonumber(saved.spamInterval) or 0
-    UpdateInterval = tonumber(saved.spamInterval) or nil
+    initialize()
   elseif event == "CHAT_MSG_SAY" then
     if isChannel("say") then
       parse(...)
@@ -137,7 +165,7 @@ function handleEvent(self, event, ...)
     end
   elseif event == "GROUP_ROSTER_UPDATE" then
     if enabled then
-      ConvertToRaid()
+      converter()
     end
   end
 end
@@ -189,6 +217,12 @@ function initInviteKeywordEditbox(this)
   inviteKeywordEditbox:SetText(saved.inviteKeyword)
 end
 
+function initRaidSizeEditbox(this)
+  raidSizeEditbox = this
+  raidSizeEditbox:ClearFocus()
+  raidSizeEditbox:SetText(saved.raidSize)
+end
+
 function toggle()
   hidden = not hidden
   if hidden then
@@ -227,8 +261,13 @@ end
 function captureInputs()
   saved.spamInterval = tonumber(spamIntervalEditbox:GetText())
   saved.spamMessage = spamMessageEditbox:GetText()
-  TimeSinceLastUpdate = tonumber(saved.spamInterval) or 0
-  UpdateInterval = tonumber(saved.spamInterval) or nil
+  TimeSinceLastUpdate = saved.spamInterval or 0
+  UpdateInterval = saved.spamInterval or nil
+  saved.raidSize = tonumber(raidSizeEditbox:GetText())
+  saved.raidSize = saved.raidSize or 40
+  if saved.raidSize > 40 then
+    saved.raidSize = 40
+  end
   saved.inviteChannels = inviteChannelsEditbox:GetText()
   saved.inviteKeyword = inviteKeywordEditbox:GetText()
 end
@@ -243,6 +282,7 @@ function editboxChanged()
   saved.spamMessage = spamMessageEditbox:GetText()
   saved.inviteChannels = inviteChannelsEditbox:GetText()
   saved.inviteKeyword = inviteKeywordEditbox:GetText()
+  saved.raidSize = raidSizeEditbox:GetText()
   captureInputs()
 end
 
@@ -255,6 +295,8 @@ function clearEditboxFocus()
   inviteChannelsEditbox:HighlightText(0, 0)
   inviteKeywordEditbox:ClearFocus()
   inviteKeywordEditbox:HighlightText(0, 0)
+  raidSizeEditbox:ClearFocus()
+  raidSizeEditbox:HighlightText(0, 0)
   root:EnableKeyboard(false)
 end
 
@@ -276,22 +318,87 @@ function guildOnlyChecked()
   saved.guildOnly = not saved.guildOnly
 end
 
-function enabledChecked()
-  enabled = not enabled
+function enabledChecked(type)
+  initialize()
+  if type == "click" then
+    enabled = not enabled
+  elseif type == "slash" then
+    enabled = true
+  end
   if enabled then
+    converter()
     TimeSinceLastUpdate = saved.spamInterval
     frame:SetScript("OnUpdate", announce)
   else
     frame:SetScript("OnUpdate", nil)
   end
+  enabledCheckBox:SetChecked(enabled)
 end
 
 function focusEditbox()
   root:EnableKeyboard(true)
 end
 
+function isEscaped(msg, i)
+  if i > 2 and string.sub(msg, i - 1, i - 1) == "\\" then
+    return true
+  end
+end
+
+function getArguments(msg)
+  if string.sub(msg, 1, 1) ~= "\"" then
+    return "", ""
+  end
+  local keyword = ""
+  local gmsg = ""
+  local inQuote = false
+  local firstArg = false
+  for i = 1, #msg do
+    if string.sub(msg, i, i) == "\"" and not inQuote then
+      if firstArg then
+        if string.sub(msg, i - 1, i - 1) ~= " " then
+          return "", ""
+        end
+      end
+      inQuote = true
+    elseif string.sub(msg, i, i) == "\"" and inQuote and not isEscaped(msg, i) then
+      inQuote = false
+      if not firstArg then
+        if string.sub(msg, i + 1, i + 1) ~= " " then
+          return "", ""
+        end
+        firstArg = true
+      else
+        return keyword, gmsg
+      end
+    elseif inQuote then
+      if not firstArg then
+        if not (string.sub(msg, i, i) == "\\" and string.sub(msg, i + 1, i + 1) == "\"") then
+          keyword = keyword .. string.sub(msg, i, i)
+        end
+      else
+        if not (string.sub(msg, i, i) == "\\" and string.sub(msg, i + 1, i + 1) == "\"") then
+          gmsg = gmsg .. string.sub(msg, i, i)
+        end
+      end
+    end
+  end
+  return "", ""
+end
+
 function slashCommand(msg)
+  if (msg ~= "") then
+    saved.inviteKeyword, saved.spamMessage = getArguments(msg)
+    if saved.inviteKeyword == "" or saved.spamMessage == "" then
+      print("Incorrect arguments.")
+      return
+    end
+    print("Invites enabled: " .. saved.inviteKeyword)
+    enabledChecked("slash")
+    return
+  end
   toggle()
+  enabledCheckBox:SetChecked(enabled)
 end
 
 SLASH_RAIDINVITE1 = "/rinv"
