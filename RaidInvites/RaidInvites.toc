@@ -1,5 +1,0 @@
-## Interface: 11304
-## Title: RaidInvites
-## SavedVariables: saved
-RaidInvites.lua
-RaidInvites.xml
